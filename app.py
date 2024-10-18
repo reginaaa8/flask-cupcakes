@@ -1,7 +1,7 @@
 """Flask app for Cupcakes"""
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
-from models import 
+from models import db, connect_db, Cupcake
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///cupcakes'
