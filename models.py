@@ -34,3 +34,12 @@ class Cupcake(db.Model):
     def __repr__(self):
         c = self
         return f"<Flavor ={c.flavor} size={c.size} rating={c.rating}>"
+    
+    def serialize_cupcake(self):
+        return {
+            'id': self.id,
+            'flavor': self.flavor,
+            'size': self.size,
+            'rating': self.rating,
+            'image': self.image
+        }
