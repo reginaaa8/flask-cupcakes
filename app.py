@@ -21,4 +21,11 @@ def list_cupcakes():
 
     return jsonify(cupcakes=cupcakes)
 
+@app.route("/api/cupcakes/<int:id>")
+def show_cupcake_info(id):
+    """get data about a specific cupcake"""
+    cupcake = Cupcake.query.get_or_404(id)
+    cupcake = cupcake.serialize_cupcake()
+
+    return cupcake
 
