@@ -42,5 +42,5 @@ def show_cupcake_info(id):
     cupcake = Cupcake.query.get_or_404(id)
     cupcake = cupcake.serialize_cupcake()
 
-    return cupcake
+    return jsonify(cupcake)
 
