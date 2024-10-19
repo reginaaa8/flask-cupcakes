@@ -23,10 +23,10 @@ def list_cupcakes():
 
 @app.route("/api/cupcakes", methods=["POST"])
 def create_cupcake():
-    data = request.json()
+    data = request.json
 
     cupcake = Cupcake(flavor=data['flavor'], 
-                      rating=data['image'], 
+                      rating=data['rating'], 
                       size=data["size"], 
                       image=data["image"])
     
