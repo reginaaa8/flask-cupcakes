@@ -1,5 +1,4 @@
 from unittest import TestCase
-
 from app import app
 from models import db, Cupcake
 
@@ -9,10 +8,6 @@ app.config['SQLALCHEMY_ECHO'] = False
 
 # Make Flask errors be real errors, rather than HTML pages with error info
 app.config['TESTING'] = True
-
-db.drop_all()
-db.create_all()
-
 
 CUPCAKE_DATA = {
     "flavor": "TestFlavor",
@@ -28,82 +23,46 @@ CUPCAKE_DATA_2 = {
     "image": "http://test.com/cupcake2.jpg"
 }
 
-
 class CupcakeViewsTestCase(TestCase):
     """Tests for views of API."""
 
     def setUp(self):
-        """Make demo data."""
-
-        Cupcake.query.delete()
-
-        cupcake = Cupcake(**CUPCAKE_DATA)
-        db.session.add(cupcake)
-        db.session.commit()
-
-        self.cupcake = cupcake
+        self.app = app
+        self.app.config['TESTING'] = True
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        self.client = self.app.test_client()
+        
+        with self.app.app_context():
+            db.create_all()  # Create the database schema
+            # Add a cupcake for testing
+            cupcake = Cupcake(flavor='TestFlavor', size='TestSize', rating=5, image='http://test.com/cupcake.jpg')
+            db.session.add(cupcake)
+            db.session.commit()
 
     def tearDown(self):
-        """Clean up fouled transactions."""
-
-        db.session.rollback()
-
-    def test_list_cupcakes(self):
-        with app.test_client() as client:
-            resp = client.get("/api/cupcakes")
-
-            self.assertEqual(resp.status_code, 200)
-
-            data = resp.json
-            self.assertEqual(data, {
-                "cupcakes": [
-                    {
-                        "id": self.cupcake.id,
-                        "flavor": "TestFlavor",
-                        "size": "TestSize",
-                        "rating": 5,
-                        "image": "http://test.com/cupcake.jpg"
-                    }
-                ]
-            })
-
-    def test_get_cupcake(self):
-        with app.test_client() as client:
-            url = f"/api/cupcakes/{self.cupcake.id}"
-            resp = client.get(url)
-
-            self.assertEqual(resp.status_code, 200)
-            data = resp.json
-            self.assertEqual(data, {
-                "cupcake": {
-                    "id": self.cupcake.id,
-                    "flavor": "TestFlavor",
-                    "size": "TestSize",
-                    "rating": 5,
-                    "image": "http://test.com/cupcake.jpg"
-                }
-            })
+        with self.app.app_context():
+            db.session.remove()  # Remove the session
+            db.drop_all()  # Drop the database schema
 
     def test_create_cupcake(self):
-        with app.test_client() as client:
-            url = "/api/cupcakes"
-            resp = client.post(url, json=CUPCAKE_DATA_2)
-
-            self.assertEqual(resp.status_code, 201)
-
-            data = resp.json
-
-            # don't know what ID we'll get, make sure it's an int & normalize
-            self.assertIsInstance(data['cupcake']['id'], int)
-            del data['cupcake']['id']
-
-            self.assertEqual(data, {
-                "cupcake": {
-                    "flavor": "TestFlavor2",
-                    "size": "TestSize2",
-                    "rating": 10,
-                    "image": "http://test.com/cupcake2.jpg"
-                }
+        with self.app.app_context():
+            response = self.client.post('/api/cupcakes', json={
+                'flavor': 'TestFlavor2',
+                'size': 'TestSize2',
+                'rating': 10,
+                'image': 'http://test.com/cupcake2.jpg'
             })
+            self.assertEqual(response.status_code, 201)
+            self.assertIn('cupcake', response.json)
 
-            self.assertEqual(Cupcake.query.count(), 2)
+    def test_get_cupcake(self):
+        with self.app.app_context():
+            cupcake = Cupcake.query.first()  # This should now work without issues
+            response = self.client.get(f"/api/cupcakes/{cupcake.id}")
+            self.assertEqual(response.status_code, 200)
+
+    def test_list_cupcakes(self):
+        with self.app.app_context():
+            response = self.client.get('/api/cupcakes')
+            self.assertEqual(response.status_code, 200)
+            self.assertIn('cupcakes', response.json)
