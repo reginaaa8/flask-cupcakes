@@ -28,6 +28,30 @@ async function showInitialCupcakes() {
   }
 }
 
+// handle form submission to add cupcake 
+
+$("#add-cupcake-form").on("submit", async function (e) {
+  e.preventDefault()
+
+  let flavor = $("#flavor").val();
+  let rating = $("#rating").val();
+  let size = $("#size").val();
+  let image = $("#image").val();
+
+  const resp = await axios.post(`${BASE_URL}/cupcakes`, {
+    flavor,
+    rating,
+    size,
+    image
+  });
+
+  let newCupcake = $(generateCupcakeHTML(resp.data.cupcake));
+  $("#cupcake-list").append(newCupcake);
+  $("#add-cupcake-form").trigger("reset");
+
+  
+});
+
 
 
 
