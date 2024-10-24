@@ -52,6 +52,16 @@ $("#add-cupcake-form").on("submit", async function (e) {
   
 });
 
+$("#cupcake-list").on("click", ".delete-button", async function(e){
+  e.preventDefault();
+
+  let $cupcake = $(e.target).closest("div")
+  let cupcakeId = $cupcake.attr("data-cupcake-id");
+
+  await axios.delete(`${BASE_URL}/cupcakes/${cupcakeId}`);
+  $cupcake.remove();
+});
+
 
 
 
